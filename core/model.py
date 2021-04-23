@@ -147,6 +147,11 @@ class Generator(nn.Module):
 
         # down/up-sampling blocks
         repeat_num = int(np.log2(img_size)) - 4
+
+        # Added to keep network size same wrt img_size=256
+        if img_size == 128:
+            repeat_num += 1
+
         if w_hpf > 0:
             repeat_num += 1
         for _ in range(repeat_num):
@@ -226,13 +231,18 @@ class StyleEncoder(nn.Module):
         blocks += [nn.Conv2d(3, dim_in, 3, 1, 1)]
 
         repeat_num = int(np.log2(img_size)) - 2
+
+        # Added to keep network size same wrt img_size=256
+        if img_size == 128:
+            repeat_num += 1
+
         for _ in range(repeat_num):
             dim_out = min(dim_in*2, max_conv_dim)
             blocks += [ResBlk(dim_in, dim_out, downsample=True)]
             dim_in = dim_out
 
         blocks += [nn.LeakyReLU(0.2)]
-        blocks += [nn.Conv2d(dim_out, dim_out, 4, 1, 0)]
+        blocks += [nn.Conv2d(dim_out, dim_out, 2, 1, 0)]
         blocks += [nn.LeakyReLU(0.2)]
         self.shared = nn.Sequential(*blocks)
 
@@ -260,13 +270,18 @@ class Discriminator(nn.Module):
         blocks += [nn.Conv2d(3, dim_in, 3, 1, 1)]
 
         repeat_num = int(np.log2(img_size)) - 2
+
+        # Added to keep network size same wrt img_size=256
+        if img_size == 128:
+            repeat_num += 1
+
         for _ in range(repeat_num):
             dim_out = min(dim_in*2, max_conv_dim)
             blocks += [ResBlk(dim_in, dim_out, downsample=True)]
             dim_in = dim_out
 
         blocks += [nn.LeakyReLU(0.2)]
-        blocks += [nn.Conv2d(dim_out, dim_out, 4, 1, 0)]
+        blocks += [nn.Conv2d(dim_out, dim_out, 2, 1, 0)]
         blocks += [nn.LeakyReLU(0.2)]
         blocks += [nn.Conv2d(dim_out, num_domains, 1, 1, 0)]
         self.main = nn.Sequential(*blocks)
