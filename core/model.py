@@ -198,7 +198,7 @@ class Generator(nn.Module):
             if (masks is not None) and (x.size(2) in [32, 64, 128]):
                 cache[x.size(2)] = x
             x = block(x)
-        for i, block in enumarete(self.decode):
+        for i, block in enumerate(self.decode):
             x = block(x, s, n[i])
             if (masks is not None) and (x.size(2) in [32, 64, 128]):
                 mask = masks[0] if x.size(2) in [32] else masks[1]
