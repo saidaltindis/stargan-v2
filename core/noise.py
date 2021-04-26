@@ -1,6 +1,7 @@
 import torch
 
 from torch import nn
+from math import sqrt
 
 class NoiseInjection(nn.Module):
     def __init__(self, channel):
@@ -9,6 +10,7 @@ class NoiseInjection(nn.Module):
         self.weight = nn.Parameter(torch.zeros(1, channel, 1, 1))
 
     def forward(self, image, noise):
+        print(noise.shape, image.shape)
         return image + self.weight * noise
 
 class EqualLR:

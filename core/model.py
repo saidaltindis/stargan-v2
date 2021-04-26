@@ -1,4 +1,5 @@
 """
+        
 StarGAN v2
 Copyright (c) 2020-present NAVER Corp.
 
@@ -86,6 +87,7 @@ class AdainResBlk(nn.Module):
         self.actv = actv
         self.upsample = upsample
         self.learned_sc = dim_in != dim_out
+        self.dim_outs = []
         self._build_weights(dim_in, dim_out, style_dim)
 
     def _build_weights(self, dim_in, dim_out, style_dim=64):
@@ -95,6 +97,7 @@ class AdainResBlk(nn.Module):
         self.norm2 = AdaIN(style_dim, dim_out)
         self.noise1 = noise.equal_lr(noise.NoiseInjection(dim_out))
         self.noise2 = noise.equal_lr(noise.NoiseInjection(dim_out))
+        self.dim_outs.append(dim_out)
 
         if self.learned_sc:
             self.conv1x1 = nn.Conv2d(dim_in, dim_out, 1, 1, 0, bias=False)
@@ -107,16 +110,16 @@ class AdainResBlk(nn.Module):
         return x
 
     def _residual(self, x, s, n):
-        x = self.noise1(x, n)
         x = self.norm1(x, s)
         x = self.actv(x)
         if self.upsample:
             x = F.interpolate(x, scale_factor=2, mode='nearest')
         x = self.conv1(x)
-        x = self.noise2(x, n)
+        x = self.noise1(x, n)
         x = self.norm2(x, s)
         x = self.actv(x)
         x = self.conv2(x)
+        x = self.noise2(x, n)
         return x
 
     def forward(self, x, s, n):
@@ -168,7 +171,6 @@ class Generator(nn.Module):
                 0, AdainResBlk(dim_out, dim_in, style_dim,
                                w_hpf=w_hpf, upsample=True))  # stack-like
             dim_in = dim_out
-
         # bottleneck blocks
         for _ in range(2):
             self.encode.append(
@@ -187,18 +189,25 @@ class Generator(nn.Module):
 
         batch = x[0].shape[0]
         step = 5 # image dim = 128
-        
+       # print("dim outs", self.dim_outs) 
         if n is None:
-            n = []
-            for i in range(step + 1):
+           n = []    
+           n.append(torch.randn(8, 512, 4, 4, device=x[0].device))
+           for i in range(step + 1):
                 size = 4 * 2 ** i
-                n.append(torch.randn(batch, 1, size, size, device=x[0].device))
-
+                if i == 4:
+                    n.append(torch.randn(8, 256, size, size, device=x[0].device))
+                elif i == 5:
+                    n.append(torch.randn(8, 128, size, size, device=x[0].device))
+                else:
+                    n.append(torch.randn(8, 512, size, size, device=x[0].device))
+           
         for block in self.encode:
             if (masks is not None) and (x.size(2) in [32, 64, 128]):
                 cache[x.size(2)] = x
             x = block(x)
         for i, block in enumerate(self.decode):
+            print(block.actv, block.dim_outs)
             x = block(x, s, n[i])
             if (masks is not None) and (x.size(2) in [32, 64, 128]):
                 mask = masks[0] if x.size(2) in [32] else masks[1]
