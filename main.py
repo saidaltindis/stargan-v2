@@ -9,6 +9,8 @@ Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
 """
 
 import os
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 import argparse
 
 from munch import Munch
@@ -84,7 +86,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     # model arguments
-    parser.add_argument('--img_size', type=int, default=256,
+    parser.add_argument('--img_size', type=int, default=128,
                         help='Image resolution')
     parser.add_argument('--num_domains', type=int, default=2,
                         help='Number of domains')
@@ -175,8 +177,8 @@ if __name__ == '__main__':
     # step size
     parser.add_argument('--print_every', type=int, default=10)
     parser.add_argument('--sample_every', type=int, default=5000)
-    parser.add_argument('--save_every', type=int, default=10000)
-    parser.add_argument('--eval_every', type=int, default=50000)
+    parser.add_argument('--save_every', type=int, default=1000)
+    parser.add_argument('--eval_every', type=int, default=5000)
 
     args = parser.parse_args()
     main(args)

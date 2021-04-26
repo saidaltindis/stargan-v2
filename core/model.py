@@ -18,7 +18,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from core.wing import FAN
 
-import noise
+import core.noise as noise
 
 
 class ResBlk(nn.Module):

@@ -1,3 +1,7 @@
+import torch
+
+from torch import nn
+
 class NoiseInjection(nn.Module):
     def __init__(self, channel):
         super().__init__()
