@@ -181,15 +181,25 @@ class Generator(nn.Module):
                 'cuda' if torch.cuda.is_available() else 'cpu')
             self.hpf = HighPass(w_hpf, device)
 
-    def forward(self, x, s, masks=None):
+    def forward(self, x, s, n=None, masks=None):
         x = self.from_rgb(x)
         cache = {}
+
+        batch = x[0].shape[0]
+        step = 5 # image dim = 128
+        
+        if n is None:
+            n = []
+            for i in range(step + 1):
+                size = 4 * 2 ** i
+                n.append(torch.randn(batch, 1, size, size, device=x[0].device))
+
         for block in self.encode:
             if (masks is not None) and (x.size(2) in [32, 64, 128]):
                 cache[x.size(2)] = x
             x = block(x)
-        for block in self.decode:
-            x = block(x, s)
+        for i, block in enumarete(self.decode):
+            x = block(x, s, n[i])
             if (masks is not None) and (x.size(2) in [32, 64, 128]):
                 mask = masks[0] if x.size(2) in [32] else masks[1]
                 mask = F.interpolate(mask, size=x.size(2), mode='bilinear')
