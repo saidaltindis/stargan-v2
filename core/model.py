@@ -87,7 +87,7 @@ class AdainResBlk(nn.Module):
         self.actv = actv
         self.upsample = upsample
         self.learned_sc = dim_in != dim_out
-        self.dim_outs = []
+        self.dim_out = dim_out
         self._build_weights(dim_in, dim_out, style_dim)
 
     def _build_weights(self, dim_in, dim_out, style_dim=64):
@@ -183,31 +183,33 @@ class Generator(nn.Module):
                 'cuda' if torch.cuda.is_available() else 'cpu')
             self.hpf = HighPass(w_hpf, device)
 
+    def calculate_noise(self, decodes):
+        dim_outs = []
+        for i, block in enumerate(self.decode):
+           dim_outs.append(block.dim_out)
+        
+        step = 5 # image dim = 128
+        
+        n = []
+        n.append(torch.randn(8, 512, 4, 4, device=x[0].device))     
+
+        for i in range(step + 1):
+            n.append(torch.randn(8, dim_outs[i], size, size, device=x[0].device))
+        
+        return n
+
     def forward(self, x, s, n=None, masks=None):
         x = self.from_rgb(x)
         cache = {}
 
-        batch = x[0].shape[0]
-        step = 5 # image dim = 128
-       # print("dim outs", self.dim_outs) 
         if n is None:
-           n = []    
-           n.append(torch.randn(8, 512, 4, 4, device=x[0].device))
-           for i in range(step + 1):
-                size = 4 * 2 ** i
-                if i == 4:
-                    n.append(torch.randn(8, 256, size, size, device=x[0].device))
-                elif i == 5:
-                    n.append(torch.randn(8, 128, size, size, device=x[0].device))
-                else:
-                    n.append(torch.randn(8, 512, size, size, device=x[0].device))
-           
+            n = calculate_noise(self.decode)
+     
         for block in self.encode:
             if (masks is not None) and (x.size(2) in [32, 64, 128]):
                 cache[x.size(2)] = x
             x = block(x)
         for i, block in enumerate(self.decode):
-            print(block.actv, block.dim_outs)
             x = block(x, s, n[i])
             if (masks is not None) and (x.size(2) in [32, 64, 128]):
                 mask = masks[0] if x.size(2) in [32] else masks[1]
