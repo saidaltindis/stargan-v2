@@ -16,8 +16,9 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
 from core.wing import FAN
+
+import noise
 
 
 class ResBlk(nn.Module):
@@ -92,6 +93,9 @@ class AdainResBlk(nn.Module):
         self.conv2 = nn.Conv2d(dim_out, dim_out, 3, 1, 1)
         self.norm1 = AdaIN(style_dim, dim_in)
         self.norm2 = AdaIN(style_dim, dim_out)
+        self.noise1 = noise.equal_lr(noise.NoiseInjection(dim_out))
+        self.noise2 = noise.equal_lr(noise.NoiseInjection(dim_out))
+
         if self.learned_sc:
             self.conv1x1 = nn.Conv2d(dim_in, dim_out, 1, 1, 0, bias=False)
 
@@ -102,19 +106,21 @@ class AdainResBlk(nn.Module):
             x = self.conv1x1(x)
         return x
 
-    def _residual(self, x, s):
+    def _residual(self, x, s, n):
+        x = self.noise1(x, n)
         x = self.norm1(x, s)
         x = self.actv(x)
         if self.upsample:
             x = F.interpolate(x, scale_factor=2, mode='nearest')
         x = self.conv1(x)
+        x = self.noise2(x, n)
         x = self.norm2(x, s)
         x = self.actv(x)
         x = self.conv2(x)
         return x
 
-    def forward(self, x, s):
-        out = self._residual(x, s)
+    def forward(self, x, s, n):
+        out = self._residual(x, s, n)
         if self.w_hpf == 0:
             out = (out + self._shortcut(x)) / math.sqrt(2)
         return out
