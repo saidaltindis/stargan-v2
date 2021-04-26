@@ -97,7 +97,6 @@ class AdainResBlk(nn.Module):
         self.norm2 = AdaIN(style_dim, dim_out)
         self.noise1 = noise.equal_lr(noise.NoiseInjection(dim_out))
         self.noise2 = noise.equal_lr(noise.NoiseInjection(dim_out))
-        self.dim_outs.append(dim_out)
 
         if self.learned_sc:
             self.conv1x1 = nn.Conv2d(dim_in, dim_out, 1, 1, 0, bias=False)
@@ -183,17 +182,19 @@ class Generator(nn.Module):
                 'cuda' if torch.cuda.is_available() else 'cpu')
             self.hpf = HighPass(w_hpf, device)
 
-    def calculate_noise(self, decodes):
+    def calculate_noise(self, decodes, x):
         dim_outs = []
         for i, block in enumerate(self.decode):
            dim_outs.append(block.dim_out)
         
+        dim_outs.pop(0)
         step = 5 # image dim = 128
         
         n = []
         n.append(torch.randn(8, 512, 4, 4, device=x[0].device))     
-
+        
         for i in range(step + 1):
+            size = 4 * 2 ** i
             n.append(torch.randn(8, dim_outs[i], size, size, device=x[0].device))
         
         return n
@@ -203,7 +204,7 @@ class Generator(nn.Module):
         cache = {}
 
         if n is None:
-            n = calculate_noise(self.decode)
+            n = self.calculate_noise(self.decode, x)
      
         for block in self.encode:
             if (masks is not None) and (x.size(2) in [32, 64, 128]):
