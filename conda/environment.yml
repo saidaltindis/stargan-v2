@@ -1,0 +1,20 @@
+name: stargan-v2
+channels:
+  - pytorch
+  - conda-forge
+  - anaconda
+  - defaults
+dependencies:
+  - python
+  - pytorch
+  - ffmpeg
+  - torchvision
+  - opencv-python
+  - scikit-image
+  - ffmpeg-python
+  - pip
+  - pip:
+      - pillow
+      - scipy
+      - tqdm
+      - munch
