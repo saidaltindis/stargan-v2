@@ -10,7 +10,7 @@ Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
 
 import os
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = "2"
+os.environ["CUDA_VISIBLE_DEVICES"] = "3"
 import argparse
 
 from munch import Munch
@@ -176,7 +176,7 @@ if __name__ == '__main__':
 
     # step size
     parser.add_argument('--print_every', type=int, default=10)
-    parser.add_argument('--sample_every', type=int, default=25000)
+    parser.add_argument('--sample_every', type=int, default=10000)
     parser.add_argument('--save_every', type=int, default=10000)
     parser.add_argument('--eval_every', type=int, default=5000)
 
