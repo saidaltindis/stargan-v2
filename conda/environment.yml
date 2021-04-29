@@ -9,12 +9,15 @@ dependencies:
   - pytorch
   - ffmpeg
   - torchvision
-  - opencv-python
-  - scikit-image
-  - ffmpeg-python
+#  - opencv-python
+#  - scikit-image
+# - ffmpeg-python
   - pip
   - pip:
       - pillow
       - scipy
       - tqdm
       - munch
+      - opencv-python
+      - scikit-image
+      - ffmpeg-python

@@ -10,7 +10,7 @@ class NoiseInjection(nn.Module):
         self.weight = nn.Parameter(torch.zeros(1, channel, 1, 1))
 
     def forward(self, image, noise):
-        #print(noise.shape, image.shape)
+        print(noise.shape, image.shape)
         return image + self.weight * noise
 
 class EqualLR:
