@@ -304,7 +304,9 @@ class StyleEncoder(nn.Module):
         out = torch.stack(out, dim=1)  # (batch, num_domains, style_dim)
         idx = torch.LongTensor(range(y.size(0))).to(y.device)
         s = out[idx, y]  # (batch, style_dim)
-        s = torch.cat(s[:, 0:32, :, :], self.mapping(z, y)[:, 32:64,:,:]), dim=1)
+        s_mapping = self.mapping(z, y)
+        print("S Shape: ", s.shape, "S_Mapping Shape", s_mapping.shape)
+        s = torch.cat(s[:, 0:32, :, :], self.mapping(z, y)[:, 32:64,:,:], dim=1)
         return s
 
 
