@@ -196,7 +196,7 @@ class Generator(nn.Module):
 
         if img_size == 128:
             constant = 4
-        else if img_size == 256:
+        elif img_size == 256:
             constant = 8
 
         n = []
@@ -250,7 +250,7 @@ class MappingNetwork(nn.Module):
                                             nn.Linear(512, style_dim))]
 
     def forward(self, z, y):
-        print("Z: ", z)
+        print("From mapping-network Z: ", z.shape)
         h = self.shared(z)
         out = []
         for layer in self.unshared:
