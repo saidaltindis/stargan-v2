@@ -251,6 +251,7 @@ class MappingNetwork(nn.Module):
 
     def forward(self, z, y):
         print("From mapping-network Z: ", z.shape)
+
         h = self.shared(z)
         out = []
         for layer in self.unshared:
@@ -287,16 +288,23 @@ class StyleEncoder(nn.Module):
         self.unshared = nn.ModuleList()
         for _ in range(num_domains):
             self.unshared += [nn.Linear(dim_out, style_dim)]
+        
+        self.mapping = MappingNetwork(16, style_dim=style_dim//2, num_domains=2) # TODO convert 16 to latent-dim
 
     def forward(self, x, y):
         h = self.shared(x)
         h = h.view(h.size(0), -1)
+
+        print("From Style Encoder x: ", x.shape)
+        z = torch.randn(x.shape[0], 16) # TODO convert 16 to self.latent-dim
+
         out = []
         for layer in self.unshared:
             out += [layer(h)]
         out = torch.stack(out, dim=1)  # (batch, num_domains, style_dim)
         idx = torch.LongTensor(range(y.size(0))).to(y.device)
         s = out[idx, y]  # (batch, style_dim)
+        s = torch.cat(s[:, 0:32, :, :], self.mapping(z, y)[:, 32:64,:,:]), dim=1)
         return s
 
 
