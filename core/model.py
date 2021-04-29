@@ -250,6 +250,7 @@ class MappingNetwork(nn.Module):
                                             nn.Linear(512, style_dim))]
 
     def forward(self, z, y):
+        print("Z: ", z)
         h = self.shared(z)
         out = []
         for layer in self.unshared:
