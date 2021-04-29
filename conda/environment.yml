@@ -7,11 +7,9 @@ channels:
 dependencies:
   - python
   - pytorch
+  - vim
   - ffmpeg
   - torchvision
-#  - opencv-python
-#  - scikit-image
-# - ffmpeg-python
   - pip
   - pip:
       - pillow

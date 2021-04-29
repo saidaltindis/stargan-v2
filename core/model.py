@@ -157,7 +157,7 @@ class Generator(nn.Module):
         repeat_num = int(np.log2(img_size)) - 4
 
         # Added to keep network size same wrt img_size=256
-        if img_size == 128:
+        if img_size == 128 or img_size == 256:
             repeat_num += 1
 
         if w_hpf > 0:
@@ -184,25 +184,31 @@ class Generator(nn.Module):
 
     def calculate_noise(self, decodes, x):
         dim_outs = []
+        
+        img_size = x.shape[1]
+        batch_size = x.shape[0]
+        
         for i, block in enumerate(self.decode):
            dim_outs.append(block.dim_out)
         
-        #dim_outs.pop(0)
-        step = 5 # image dim = 256
-        
-        print(dim_outs)
+        step = 5 # may change depending on image size, but it does no harm if it is bigger than necessary.
+        constant = 1
+
+        if img_size == 128:
+            constant = 4
+        else if img_size == 256:
+            constant = 8
 
         n = []
-        n.append(torch.randn(x.shape[0], dim_outs.pop(0), 8, 8, device=x[0].device))     
+        n.append(torch.randn(batch_size, dim_outs.pop(0), constant, constant, device=x[0].device))     
         
         for i in range(step + 1):
-            size = 8 * 2 ** i
-            n.append(torch.randn(x.shape[0], dim_outs[i], size, size, device=x[0].device))
+            size = constant * 2 ** i
+            n.append(torch.randn(batch_size, dim_outs[i], size, size, device=x[0].device))
         
         return n
 
     def forward(self, x, s, n=None, masks=None):
-        print(x.shape)
         x = self.from_rgb(x)
         cache = {}
 
@@ -283,11 +289,9 @@ class StyleEncoder(nn.Module):
 
     def forward(self, x, y):
         h = self.shared(x)
-        print(h.size(0))
         h = h.view(h.size(0), -1)
         out = []
         for layer in self.unshared:
-            print("layer", layer,"h", h.shape)
             out += [layer(h)]
         out = torch.stack(out, dim=1)  # (batch, num_domains, style_dim)
         idx = torch.LongTensor(range(y.size(0))).to(y.device)
@@ -305,7 +309,7 @@ class Discriminator(nn.Module):
         repeat_num = int(np.log2(img_size)) - 2
 
         # Added to keep network size same wrt img_size=256
-        if img_size == 128:
+        if img_size == 128 or img_size == 256:
             repeat_num += 1
 
         for _ in range(repeat_num):
