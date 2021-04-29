@@ -103,6 +103,7 @@ class Solver(nn.Module):
             x_ref, x_ref2, y_trg = inputs.x_ref, inputs.x_ref2, inputs.y_ref
             z_trg, z_trg2 = inputs.z_trg, inputs.z_trg2
             print("z_trg: ", z_trg, "z_trg2: ", z_trg2)
+            print("x_ref: ", x_ref, "x_ref2: ", x_ref2)
 
             masks = nets.fan.get_heatmap(x_real) if args.w_hpf > 0 else None
 
