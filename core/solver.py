@@ -251,9 +251,15 @@ def compute_g_loss(nets, args, x_real, y_org, y_trg, z_trgs=None, x_refs=None, m
         s_trg2 = nets.mapping_network(z_trg2, y_trg)
     else:
         s_trg2 = nets.style_encoder(x_ref2, y_trg)
+        s_trg3 = nets.style_encoder(x_ref2, y_trg)
     x_fake2 = nets.generator(x_real, s_trg2, masks=masks)
     x_fake2 = x_fake2.detach()
     loss_ds = torch.mean(torch.abs(x_fake - x_fake2))
+
+    if z_trgs is None:
+        x_fake3 = nets.generator(x_real, s_trg3, masks=masks)
+        x_fake3 = x_fake3.detach()
+        loss_ds += torch.mean(torch.abs(x_fake - x_fake3))
 
     # cycle-consistency loss
     masks = nets.fan.get_heatmap(x_fake) if args.w_hpf > 0 else None
